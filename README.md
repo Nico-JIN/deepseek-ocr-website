@@ -1,24 +1,46 @@
 ﻿# DeepSeek-OCR 智能识别平台
 
 基于 DeepSeek-OCR 模型的 OCR 识别平台，集成 FastAPI 后端与 React 前端，提供实时流式识别、多语言界面、对象定位等功能。
+<img width="2316" height="1267" alt="QQ_1761220455659" src="https://github.com/user-attachments/assets/d1acce55-6586-4d0b-b1ed-df6dc7c81cad" />
 
 ## 📋 项目简介
 
 一个开箱即用的 OCR 识别平台，支持：
-- ✨ 多格式输出：Markdown、结构化 OCR、图表解析、对象定位
-- 🚀 实时流式识别，进度实时推送
-- 🌍 中英双语界面切换
-- 🎯 任务取消控制
-- 📄 支持图片与 PDF 文档识别
+- ✨ **多种解析模式**：Markdown、结构化 OCR、图表解析、对象定位  
+- 🌍 **中英双语界面切换**  
+- 🎯 **任务取消控制**  
+- 📄 **支持图片与 PDF 文档识别**  
+- 🖼️ **支持多种分辨率**：Tiny（512×512）、Small（640×640）、Base（1024×1024）、Large（1280×1280）、Gundam（动态分辨率）
 
-## 🔧 环境要求
+## 🚀 亮点 对象定位
+> 通过输入一张图片以及自定描述，可以指定框选的内容。类似与YOLO识别功能，速度很快！
+<img width="2174" height="1245" alt="QQ_1761221176883" src="https://github.com/user-attachments/assets/49ded46d-adbd-4e01-8f62-f6ba988a326e" />
 
-| 组件 | 版本 |
-|------|------|
-| Python | 3.9+ |
-| Node.js | 18+ |
-| CUDA | 11+ (推荐) |
-| GPU内存 | 8GB+ (推荐) |
+## 📄 分页式实时识别
+> 如一份pdf有多页，可进行边解析边显示，并显示视觉标记。
+<img width="2162" height="1218" alt="QQ_1761221635984" src="https://github.com/user-attachments/assets/73f9cb52-48d2-4e55-badb-21f423224aad" />
+<img width="846" height="1208" alt="QQ_1761222292828" src="https://github.com/user-attachments/assets/5b1493e1-de12-45d3-9766-76d8c4af1ca7" />
+
+## 📁 项目结构
+
+```
+DeepSeek-OCR-1/
+├── backend/                 # FastAPI 后端
+│   ├── main.py             # API 入口
+│   ├── ocr_service.py      # OCR 服务
+│   ├── start.bat           # Windows 启动脚本
+│   └── start.sh            # Linux/Mac 启动脚本
+├── frontend/               # React 前端
+│   ├── src/                # 源代码
+│   ├── start.bat           # Windows 启动脚本
+│   └── start.sh            # Linux/Mac 启动脚本
+├── DeepSeek-OCR-master/    # 模型文件目录
+│   └── DeepSeek-OCR-hf/    # HuggingFace 模型
+├── uploads/                # 上传文件目录
+├── requirements.txt        # Python 依赖
+└── README.md               # 项目文档
+```
+
 
 ## 📦 安装步骤
 
@@ -41,13 +63,6 @@ pip install -r requirements.txt
 cd ..
 ```
 
-**主要依赖包：**
-- fastapi
-- uvicorn
-- torch
-- transformers
-- PyMuPDF
-- Pillow
 
 ### 3. 安装前端依赖
 
@@ -115,11 +130,11 @@ cd frontend
 npm run dev
 ```
 
-前端默认运行在：`http://localhost:5173`
+前端默认运行在：`http://localhost:3000`
 
 ## 🎨 使用说明
 
-1. 打开浏览器访问 `http://localhost:5173`
+1. 打开浏览器访问 `http://localhost:3000`
 2. 上传图片或 PDF 文件
 3. 选择识别模式和输出格式
 4. 点击"开始识别"，实时查看识别结果
@@ -186,25 +201,6 @@ npm install -g cnpm --registry=https://registry.npmmirror.com
 cnpm install
 ```
 
-## 📁 项目结构
-
-```
-DeepSeek-OCR-1/
-├── backend/                 # FastAPI 后端
-│   ├── main.py             # API 入口
-│   ├── ocr_service.py      # OCR 服务
-│   ├── start.bat           # Windows 启动脚本
-│   └── start.sh            # Linux/Mac 启动脚本
-├── frontend/               # React 前端
-│   ├── src/                # 源代码
-│   ├── start.bat           # Windows 启动脚本
-│   └── start.sh            # Linux/Mac 启动脚本
-├── DeepSeek-OCR-master/    # 模型文件目录
-│   └── DeepSeek-OCR-hf/    # HuggingFace 模型
-├── uploads/                # 上传文件目录
-├── requirements.txt        # Python 依赖
-└── README.md               # 项目文档
-```
 
 ## 📄 许可证
 
