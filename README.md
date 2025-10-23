@@ -75,11 +75,21 @@ cd ..
 
 ## 🤖 模型下载
 
-模型存放位置：`DeepSeek-OCR-master/DeepSeek-OCR-hf/`
+模型存放位置：`models/`
 
 **方式一：手动下载**
 1. 访问 [DeepSeek-OCR HuggingFace](https://huggingface.co/deepseek-ai/deepseek-ocr)
-2. 下载模型文件到 `DeepSeek-OCR-master/DeepSeek-OCR-hf/` 目录
+2. 下载模型文件到 `models/` 目录
+3. 配置本地模型
+   ```bash
+   # 所在目录 /backend/ocr_Service.py中
+   class OCRService:
+    def __init__(self):
+        self.model = None
+        self.tokenizer = None
+        self.model_name = '修改为自己的本地模型存储路径' 
+        self._ready = False
+   ```
 
 **方式二：自动下载**
 - 首次启动后端时，程序会自动从 HuggingFace 下载模型（需要网络连接）
