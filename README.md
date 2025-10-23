@@ -1,12 +1,17 @@
-﻿<div align=" center\>
+<div align=" center\>
 
 # DeepSeek-OCR 智能识别平台
 
 跨端一体的 OCR 识别实验平台，集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
+<img width="1540" height="913" alt="QQ_1761210498105" src="https://github.com/user-attachments/assets/5aa7db33-6c98-4701-b218-4a72b6e96a6f" />
+
+
 
 </div>
 
 ## 🎯 项目亮点
+<img width="721" height="501" alt="QQ_1761210265802" src="https://github.com/user-attachments/assets/74824587-d168-4867-899e-df43c5beefe0" />
+
 
 - **全链路方案**：Python FastAPI 后端 + React 前端，开箱即用的 OCR/定位平台。
 - **多格式识别**：支持 Markdown、结构化 OCR、自由识别、图表解析、对象定位等多种输出。
@@ -91,16 +96,22 @@ npm run preview # 预览打包结果
 `
 
 ## 📦 功能详解
+<img width="714" height="386" alt="QQ_1761210304449" src="https://github.com/user-attachments/assets/338db538-2d0c-4140-bfd1-7cf1e263c7a2" />
 
 - **文件上传**：支持拖拽或点击上传，自动生成图片/PDF 预览。
 - **模式选择**：提供 Tiny/Base/Gundam 等模型规格，按需组合分辨率与性能。
+  ![Uploading QQ_1761210265802.png…]()
+
 - **输出格式**：
  - Markdown 文档
  - OCR 布局文本
  - 自由识别（无布局）
  - 图表解析
  - 对象定位（返回标注图片）
+ - <img width="1609" height="912" alt="QQ_1761210214977" src="https://github.com/user-attachments/assets/94d99033-6a17-4bef-8188-3053270f8bb0" />
 - **自定义提示词**：按格式自动判断是否必填，并在切换时重置无效提示词。
+
+  
 - **识别控制**：
  - SSE 流式更新文本/图片缩略图
  - 右上角可一键终止正在运行的任务
