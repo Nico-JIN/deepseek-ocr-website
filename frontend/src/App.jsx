@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import axios from 'axios'
 import { Upload, Settings, Sparkles, Zap, Copy, Check, Download } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -8,28 +8,194 @@ import Header from './components/Header'
 
 const API_BASE_URL = 'http://localhost:8000'
 
+const STRINGS = {
+  en: {
+    headerTitle: 'DeepSeek-OCR Lab',
+    statusConnected: 'Connected',
+    statusPreview: 'Preview Mode',
+    settings: 'Settings',
+    languageEnglish: 'English',
+    languageChinese: '中文',
+    uploadSectionTitle: 'File Upload',
+    dropHintTitle: 'Drag files here, or click to upload',
+    dropHintSubtitle: 'Supports JPG, PNG, PDF and more',
+    pdfFileLabel: 'PDF File',
+    doubleClickHint: 'Double-click to preview full content',
+    noPreviewText: 'No preview available',
+    noPreviewSubtext: 'Upload a file to see the preview here',
+    reselectButton: 'Choose Another File',
+    previewTitle: 'Source Preview',
+    closePreview: 'Close Preview',
+    configSectionTitle: 'Configuration',
+    modeLabel: 'Model Size',
+    formatLabel: 'Output Format',
+    promptLabelRequired: 'Target to locate (required)',
+    promptLabelOptional: 'Custom prompt (optional)',
+    promptRequiredWarning: 'Please provide the target to locate in the image',
+    startButton: 'Start Recognition',
+    processingButton: 'Processing…',
+    cancelButton: 'Stop Recognition',
+    cancellingButton: 'Stopping…',
+    dragZoneProcessing: 'Processing…',
+    pagePreviewTitle: 'Page Preview',
+    viewAll: (count) => `View All (${count})`,
+    collapseAll: 'Collapse',
+    recResultTitle: 'Object Localization Result',
+    recResultHint: 'Tip: click the image to view the full size',
+    recInfoMode: 'Model',
+    recInfoFormat: 'Output Format',
+    downloadImage: 'Download',
+    recognitionResultTitle: 'Recognition Result',
+    waitingForResult: 'Waiting for result…',
+    liveUpdating: 'Updating…',
+    copyButton: 'Copy',
+    copiedButton: 'Copied',
+    exportButton: 'Export',
+    exportSuccess: 'Export successful',
+    loadingText: 'AI is processing…',
+    placeholderHeading: 'Results will appear here',
+    placeholderBody: 'Upload a file and start recognition to see the output',
+    recLoadingTitle: 'Locating objects…',
+    recLoadingSubtitle: 'The annotated image will appear once ready',
+    cancelNotice: 'Recognition was cancelled',
+    singleImagePreviewTitle: 'Recognition Preview',
+    resultModalTitle: 'Recognition Result',
+    modalClose: 'Close',
+    toastRecComplete: 'Localization complete!',
+    toastOcrComplete: 'Recognition complete!',
+    footerAboutTitle: 'About',
+    footerAboutBody: 'An intelligent OCR platform powered by DeepSeek-OCR, supporting multiple document formats and output modes.',
+    footerLinksTitle: 'Links',
+    footerLinkGithub: 'GitHub Repository',
+    footerLinkModel: 'Hugging Face Model',
+    footerLinkWebsite: 'DeepSeek Website',
+    footerTeamTitle: 'Team',
+    footerTeamName: 'No.2 Xiaoming Lab',
+    footerTeamDescription: 'Dedicated to AI research and product development.',
+    footerCopyright: '© 2024 No.2 Xiaoming Lab. All rights reserved.',
+    alertSelectFile: 'Please select a file first',
+    alertBackendOffline: 'Backend service is offline. Start the backend server and try again.',
+    alertRecPromptRequired: 'Please enter the target you want to locate in the image',
+    alertNoTextToCopy: 'There is no text to copy',
+    alertCopyFailed: (msg) => `Copy failed: ${msg}`,
+    alertNoTextToExport: 'There is no text to export',
+    alertExportFailed: (msg) => `Export failed: ${msg}`,
+    alertStreamingFailed: (msg) => `Recognition failed\n\n${msg}`,
+    alertEmptyResponse: 'Backend returned an empty result',
+    defaultStreamingError: 'Streaming failed, please try again',
+    defaultProcessingError: 'Processing failed, please try again',
+    pageLabel: (page) => `Page ${page}`,
+    thumbnailsProcessingLabel: (count) => `Processing ${count} page(s)`,
+    toastDuration: (seconds) => `Duration ${seconds}s`,
+    toastCharacters: (count) => `${count} chars`,
+    toastImageReady: 'Annotated image generated'
+  },
+  zh: {
+    headerTitle: 'DeepSeek-OCR 实验基地',
+    statusConnected: '已连接',
+    statusPreview: '预览模式',
+    settings: '设置',
+    languageEnglish: 'English',
+    languageChinese: '中文',
+    uploadSectionTitle: '文件上传',
+    dropHintTitle: '拖拽文件到此处，或点击上传',
+    dropHintSubtitle: '支持 JPG、PNG、PDF 等格式',
+    pdfFileLabel: 'PDF文件',
+    doubleClickHint: '双击查看完整内容',
+    noPreviewText: '无可预览内容',
+    noPreviewSubtext: '上传文件后将显示预览',
+    reselectButton: '重新选择',
+    previewTitle: '原文预览',
+    closePreview: '关闭预览',
+    configSectionTitle: '配置选项',
+    modeLabel: '模型规格',
+    formatLabel: '输出格式',
+    promptLabelRequired: '定位目标（必填）',
+    promptLabelOptional: '自定义提示词（可选）',
+    promptRequiredWarning: '请输入要在图片中定位的内容',
+    startButton: '开始识别',
+    processingButton: '处理中...',
+    cancelButton: '终止识别',
+    cancellingButton: '正在终止...',
+    dragZoneProcessing: '处理中...',
+    pagePreviewTitle: '页面预览',
+    viewAll: (count) => `查看全部 (${count})`,
+    collapseAll: '收起',
+    recResultTitle: '🎯 对象定位结果',
+    recResultHint: '💡 点击图片查看完整大图',
+    recInfoMode: '模型规格',
+    recInfoFormat: '输出格式',
+    downloadImage: '下载',
+    recognitionResultTitle: '识别结果',
+    waitingForResult: '等待结果...',
+    liveUpdating: '实时更新中...',
+    copyButton: '复制',
+    copiedButton: '已复制',
+    exportButton: '导出',
+    exportSuccess: '导出成功',
+    loadingText: 'AI正在处理中...',
+    placeholderHeading: '识别结果将显示在这里',
+    placeholderBody: '上传文件并配置选项后，点击“开始识别”按钮',
+    recLoadingTitle: '🎯 正在定位对象...',
+    recLoadingSubtitle: '处理完成后将显示带标注框的图片',
+    cancelNotice: '识别已取消',
+    singleImagePreviewTitle: '识别预览',
+    resultModalTitle: '识别结果',
+    modalClose: '关闭',
+    toastRecComplete: '🎯 定位完成！',
+    toastOcrComplete: '✅ 识别完成！',
+    footerAboutTitle: '关于项目',
+    footerAboutBody: '基于 DeepSeek-OCR 的智能文本识别平台，提供高精度的 OCR 识别服务，支持多种文档格式和输出方式。',
+    footerLinksTitle: '相关链接',
+    footerLinkGithub: 'GitHub 仓库',
+    footerLinkModel: 'Hugging Face 模型',
+    footerLinkWebsite: 'DeepSeek 官网',
+    footerTeamTitle: '开发团队',
+    footerTeamName: '二号小明实验室',
+    footerTeamDescription: '专注于 AI 技术研究与应用开发',
+    footerCopyright: '© 2024 二号小明实验室. 保留所有权利。',
+    alertSelectFile: '请先选择文件',
+    alertBackendOffline: '后端服务未启动。请先启动后端服务后再试。',
+    alertRecPromptRequired: '请输入要在图片中定位的内容',
+    alertNoTextToCopy: '没有可复制的内容',
+    alertCopyFailed: (msg) => `复制失败：${msg}`,
+    alertNoTextToExport: '没有可导出的内容',
+    alertExportFailed: (msg) => `导出失败：${msg}`,
+    alertStreamingFailed: (msg) => `❌ 识别失败\n\n${msg}`,
+    alertEmptyResponse: '后端返回了空结果',
+    defaultStreamingError: '流式处理失败，请重试',
+    defaultProcessingError: '处理失败，请重试',
+    pageLabel: (page) => `第 ${page} 页`,
+    thumbnailsProcessingLabel: (count) => `处理中 ${count} 页`,
+    toastDuration: (seconds) => `耗时 ${seconds}秒`,
+    toastCharacters: (count) => `${count}字符`,
+    toastImageReady: '已生成标注图片'
+  }
+}
+
 const DEFAULT_CONFIGS = {
   modes: [
-    { value: "tiny", label: "Tiny - 512×512 (快速)", base_size: 512, image_size: 512, crop_mode: false },
-    { value: "small", label: "Small - 640×640 (标准)", base_size: 640, image_size: 640, crop_mode: false },
-    { value: "base", label: "Base - 1024×1024 (推荐)", base_size: 1024, image_size: 1024, crop_mode: false },
-    { value: "large", label: "Large - 1280×1280 (高质)", base_size: 1280, image_size: 1280, crop_mode: false },
-    { value: "gundam", label: "Gundam - 动态分辨率", base_size: 1024, image_size: 640, crop_mode: true }
+    { value: 'tiny', label: { en: 'Tiny - 512×512 (Fast)', zh: 'Tiny - 512×512 (快速)' }, base_size: 512, image_size: 512, crop_mode: false },
+    { value: 'small', label: { en: 'Small - 640×640 (Standard)', zh: 'Small - 640×640 (标准)' }, base_size: 640, image_size: 640, crop_mode: false },
+    { value: 'base', label: { en: 'Base - 1024×1024 (Recommended)', zh: 'Base - 1024×1024 (推荐)' }, base_size: 1024, image_size: 1024, crop_mode: false },
+    { value: 'large', label: { en: 'Large - 1280×1280 (High Quality)', zh: 'Large - 1280×1280 (高质)' }, base_size: 1280, image_size: 1280, crop_mode: false },
+    { value: 'gundam', label: { en: 'Gundam - Dynamic Resolution', zh: 'Gundam - 动态分辨率' }, base_size: 1024, image_size: 640, crop_mode: true }
   ],
   output_formats: [
-    { value: "markdown", label: "Markdown 文档", icon: "📄", input_type: "optional" },
-    { value: "ocr", label: "OCR 图片识别", icon: "📝", input_type: "optional" },
-    { value: "free_ocr", label: "自由识别（无布局）", icon: "✨", input_type: "optional" },
-    { value: "figure", label: "图表解析", icon: "📊", input_type: "optional" },
-    { value: "general", label: "详细描述", icon: "💬", input_type: "none", description: "返回图片的详细文本描述" },
-    { value: "rec", label: "对象定位", icon: "🎯", input_type: "required", description: "返回带标注框的图片", placeholder: "请输入要定位的内容，如：红色按钮、标题文字等" }
+    { value: 'markdown', icon: '📄', input_type: 'optional', label: { en: 'Markdown Document', zh: 'Markdown 文档' }, description: { en: '', zh: '' }, placeholder: { en: 'Leave empty to use the default prompt…', zh: '留空使用默认提示词…' } },
+    { value: 'ocr', icon: '📝', input_type: 'optional', label: { en: 'OCR Text Recognition', zh: 'OCR 图片识别' }, description: { en: '', zh: '' }, placeholder: { en: 'Leave empty to use the default prompt…', zh: '留空使用默认提示词…' } },
+    { value: 'free_ocr', icon: '✨', input_type: 'optional', label: { en: 'Free OCR (No Layout)', zh: '自由识别（无布局）' }, description: { en: '', zh: '' }, placeholder: { en: 'Leave empty to use the default prompt…', zh: '留空使用默认提示词…' } },
+    { value: 'figure', icon: '📊', input_type: 'optional', label: { en: 'Figure Analysis', zh: '图表解析' }, description: { en: '', zh: '' }, placeholder: { en: 'Leave empty to use the default prompt…', zh: '留空使用默认提示词…' } },
+    { value: 'general', icon: '💬', input_type: 'none', label: { en: 'Detailed Description', zh: '详细描述' }, description: { en: 'Returns a detailed textual description of the image', zh: '返回图片的详细文本描述' } },
+    { value: 'rec', icon: '🎯', input_type: 'required', label: { en: 'Object Localization', zh: '对象定位' }, description: { en: 'Returns an annotated image with bounding boxes', zh: '返回带标注框的图片' }, placeholder: { en: 'Enter the object you want to locate, e.g. “red button”', zh: '请输入要定位的内容，如：红色按钮、标题文字等' } }
   ],
-  default_mode: "base",
-  default_format: "markdown"
+  default_mode: 'base',
+  default_format: 'markdown'
 }
 
 function App() {
   const [configs] = useState(DEFAULT_CONFIGS)
+  const [language, setLanguage] = useState('en')
   const [selectedFile, setSelectedFile] = useState(null)
   const [filePreview, setFilePreview] = useState(null)
   const [selectedMode, setSelectedMode] = useState('base')
@@ -55,10 +221,82 @@ function App() {
   const [isCancelling, setIsCancelling] = useState(false)
   const cancelledByUserRef = useRef(false)
 
+  const strings = useMemo(() => STRINGS[language] ?? STRINGS.en, [language])
+  const t = useCallback((key, ...args) => {
+    const value = strings[key] ?? STRINGS.en[key] ?? key
+    return typeof value === 'function' ? value(...args) : value
+  }, [strings])
+
   const currentFormatConfig = useMemo(
     () => configs.output_formats.find((f) => f.value === selectedFormat),
     [configs, selectedFormat]
   )
+
+  const getModeLabel = useCallback((mode) => {
+    if (!mode) return ''
+    if (typeof mode.label === 'string') return mode.label
+    return mode.label?.[language] ?? mode.label?.en ?? ''
+  }, [language])
+
+  const headerLabels = useMemo(() => ({
+    title: t('headerTitle'),
+    settings: t('settings'),
+    languageEnglish: t('languageEnglish'),
+    languageChinese: t('languageChinese'),
+    connected: t('statusConnected'),
+    preview: t('statusPreview')
+  }), [t])
+
+  const getFormatLabel = useCallback((format) => {
+    if (!format) return ''
+    if (typeof format.label === 'string') return format.label
+    return format.label?.[language] ?? format.label?.en ?? ''
+  }, [language])
+
+  const getFormatDescription = useCallback((format) => {
+    if (!format) return ''
+    if (!format.description) return ''
+    if (typeof format.description === 'string') return format.description
+    return format.description?.[language] ?? format.description?.en ?? ''
+  }, [language])
+
+  const getFormatPlaceholder = useCallback((format) => {
+    if (!format) return ''
+    if (!format.placeholder) return ''
+    if (typeof format.placeholder === 'string') return format.placeholder
+    return format.placeholder?.[language] ?? format.placeholder?.en ?? ''
+  }, [language])
+
+  const getFormatByValue = useCallback((value) => {
+    return configs.output_formats.find((f) => f.value === value)
+  }, [configs])
+
+  const getStreamingTimeLabel = useCallback((ms) => {
+    if (typeof ms !== 'number') return ''
+    const seconds = (ms / 1000).toFixed(2)
+    return language === 'en' ? ` · Elapsed ${seconds}s` : ` · 已用时 ${seconds}s`
+  }, [language])
+
+  const getDurationLabel = useCallback((ms) => {
+    if (typeof ms !== 'number') return ''
+    const seconds = (ms / 1000).toFixed(2)
+    return language === 'en' ? ` · Duration ${seconds}s` : ` · 耗时 ${seconds}s`
+  }, [language])
+
+  const getCharacterCountLabel = useCallback((count) => {
+    return language === 'en' ? `${count} chars` : `${count} 字符`
+  }, [language])
+
+  const sanitizeDisplayText = useCallback((text) => {
+    if (!text) return ''
+    let sanitized = text
+      .replace(/^[\t >*-]*[A-Za-z0-9_\- ]+\s*\(boxes:[^)]*\)\s*(\r?\n)?/gm, '')
+      .replace(/\(boxes:[^)]*\)/g, '')
+    sanitized = sanitized.replace(/\n{3,}/g, '\n\n')
+    return sanitized.trim()
+  }, [])
+
+  const displayText = useMemo(() => sanitizeDisplayText(result?.text || ''), [result?.text, sanitizeDisplayText])
 
   useEffect(() => {
     checkBackend()
@@ -174,12 +412,12 @@ function App() {
 
   const handleSubmit = async () => {
     if (!selectedFile) {
-      alert('⚠️ 请先选择文件')
+      alert(t('alertSelectFile'))
       return
     }
 
     if (!backendAvailable) {
-      alert('❌ 后端服务未启动！\n\n当前处于UI预览模式。\n请先启动后端服务以使用OCR功能。\n\n提示：\n1. 在 backend 目录运行 start.bat\n2. 等待模型加载完成\n3. 返回页面重试')
+      alert(t('alertBackendOffline'))
       return
     }
 
@@ -188,7 +426,7 @@ function App() {
     const promptValue = customPrompt.trim()
 
     if (formatCfg?.input_type === 'required' && !promptValue) {
-      alert('⚠️ 请输入要在图片中定位的内容')
+      alert(t('alertRecPromptRequired'))
       return
     }
 
@@ -285,7 +523,7 @@ function App() {
               })
             } catch (e) {
               console.error('❌ Fallback request failed:', e)
-              setError(e.response?.data?.detail || '处理失败，请重试')
+              setError(e.response?.data?.detail || t('defaultProcessingError'))
             } finally {
               setLoading(false)
             }
@@ -335,7 +573,8 @@ function App() {
                   console.log(`📄 Received page ${data.page}/${data.total}, text length: ${chunkText.length}, image: ${data.image_url ? 'YES' : 'NO'}`)
                   
                   // 添加页面标题分隔
-                  const pageHeader = `\n\n--- 第 ${data.page} 页 ---\n\n`
+                  const headerLabel = t('pageLabel', data.page)
+                  const pageHeader = `\n\n--- ${headerLabel} ---\n\n`
                   accumulatedText += pageHeader + chunkText
                   
                   const pageInfo = { 
@@ -455,7 +694,7 @@ function App() {
                 setStreamCtrl(null)
                 try { if (fallbackTimer) clearTimeout(fallbackTimer) } catch {}
                 try { if (timerRef.current) clearInterval(timerRef.current) } catch {}
-                setError('识别已取消')
+                setError(t('cancelNotice'))
                 setResult(null)
                 break
               }
@@ -477,8 +716,8 @@ function App() {
           return
         }
         console.error('❌ Streaming OCR failed:', err)
-        const errorMsg = err.message || '流式处理失败，请重试'
-        alert(`❌ 识别失败\n\n${errorMsg}`)
+        const errorMsg = err.message || t('defaultStreamingError')
+        alert(t('alertStreamingFailed', errorMsg))
         setError(errorMsg)
         setLoading(false)
         try { if (timerRef.current) clearInterval(timerRef.current) } catch {}
@@ -523,13 +762,13 @@ function App() {
           }, 100)
         } else {
           console.error('❌ No text in response!')
-          alert('后端返回了空结果')
+          alert(t('alertEmptyResponse'))
         }
       } catch (err) {
         console.error('❌ OCR request failed:', err)
         console.error('Response data:', err.response?.data)
-        const errorMsg = err.response?.data?.detail || '处理失败，请重试'
-        alert(`❌ 识别失败\n\n${errorMsg}`)
+        const errorMsg = err.response?.data?.detail || t('defaultProcessingError')
+        alert(t('alertStreamingFailed', errorMsg))
         setError(errorMsg)
       } finally {
         setLoading(false)
@@ -572,6 +811,17 @@ function App() {
     setShowPreview(false)
   }
 
+  const handleDownloadImage = (relativeUrl, filename = `ocr_result_${Date.now()}.jpg`) => {
+    if (!relativeUrl) return
+    const url = relativeUrl.startsWith('http') ? relativeUrl : `${API_BASE_URL}${relativeUrl}`
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const handleCopy = (e) => {
     console.log('🟢 handleCopy 函数被调用！')
     e?.preventDefault?.()
@@ -581,11 +831,11 @@ function App() {
     console.log('🔍 result?.text:', result?.text)
     console.log('🔍 text length:', result?.text?.length)
     
-    const textToCopy = result?.text || ''
+    const textToCopy = displayText
     
     if (!textToCopy) {
       console.warn('⚠️ No text to copy')
-      alert('没有可复制的内容')
+      alert(t('alertNoTextToCopy'))
       return
     }
     
@@ -597,7 +847,7 @@ function App() {
       })
       .catch(err => {
         console.error('❌ Copy failed:', err)
-        alert('复制失败：' + err.message)
+        alert(t('alertCopyFailed', err.message))
       })
   }
 
@@ -609,11 +859,11 @@ function App() {
     console.log('🔍 result:', result)
     console.log('🔍 result?.text:', result?.text)
     
-    const textToExport = result?.text || ''
+    const textToExport = displayText
     
     if (!textToExport) {
       console.warn('⚠️ No text to export')
-      alert('没有可导出的内容')
+      alert(t('alertNoTextToExport'))
       return
     }
     
@@ -634,20 +884,25 @@ function App() {
       console.log('✅ Export successful:', filename)
     } catch (err) {
       console.error('❌ Export failed:', err)
-      alert('导出失败：' + err.message)
+      alert(t('alertExportFailed', err.message))
     }
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
-      <Header backendAvailable={backendAvailable} />
-      
-      <div className="container mx-auto px-6 py-6 max-w-7xl">
+    <div className="min-h-screen gradient-bg flex flex-col">
+      <Header
+        backendAvailable={backendAvailable}
+        language={language}
+        onLanguageChange={setLanguage}
+        labels={headerLabels}
+      />
+
+      <div className="container mx-auto px-6 py-6 max-w-7xl flex-1 flex flex-col min-h-0">
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start lg:items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch h-full flex-1 min-h-0">
           
           {/* Left Column - Upload/Preview and Settings */}
-          <div className="space-y-4 h-full flex flex-col lg:self-stretch">
+          <div className="space-y-4 h-full flex flex-col lg:self-stretch min-h-0 lg:overflow-y-auto lg:pr-2">
             {/* Upload Section OR Preview Section */}
             <div className="glass-effect rounded-2xl p-5 card-shadow">
               {!showPreview ? (
@@ -656,7 +911,7 @@ function App() {
                     <div className="p-1.5 bg-primary/20 rounded-lg">
                       <Upload className="w-4 h-4 text-primary" />
                     </div>
-                    <h2 className="text-base font-semibold text-white">文件上传</h2>
+                    <h2 className="text-base font-semibold text-white">{t('uploadSectionTitle')}</h2>
                   </div>
                   <div
                     className={`relative border-2 border-dashed rounded-xl p-5 cursor-pointer transition-all ${
@@ -683,7 +938,7 @@ function App() {
                           className="relative w-full h-28 bg-dark-lighter rounded-lg overflow-hidden cursor-pointer group"
                           onDoubleClick={handlePreviewClick}
                           onClick={(e) => e.stopPropagation()}
-                          title="双击查看完整内容"
+                          title={t('doubleClickHint')}
                         >
                           {filePreview && filePreview !== 'pdf' ? (
                             <img src={filePreview} alt="Preview" className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
@@ -693,7 +948,7 @@ function App() {
                                 <svg className="w-12 h-12 text-red-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
                                 </svg>
-                                <p className="text-white text-xs font-medium">PDF文件</p>
+                                <p className="text-white text-xs font-medium">{t('pdfFileLabel')}</p>
                               </div>
                             </div>
                           ) : (
@@ -704,25 +959,25 @@ function App() {
                             </div>
                           )}
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <p className="text-white text-xs font-medium">双击预览完整内容</p>
+                            <p className="text-white text-xs font-medium">{t('doubleClickHint')}</p>
                           </div>
                         </div>
                         <div className="text-left px-1">
-                          <p className="text-white font-medium text-sm truncate">{selectedFile.name}</p>
-                          <p className="text-gray-400 text-xs">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <p className="text-white font-medium text-sm truncate">{selectedFile.name}</p>
+                        <p className="text-gray-400 text-xs">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setFilePreview(null) }}
                           className="w-full px-3 py-1.5 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all text-xs font-medium"
-                        >重新选择</button>
+                        >{t('reselectButton')}</button>
                       </div>
                     ) : (
                       <div className="py-3 text-center">
                         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
                           <Upload className="w-5 h-5 text-primary" />
                         </div>
-                        <p className="text-white font-medium text-xs mb-1">拖拽文件到此处，或点击上传</p>
-                        <p className="text-gray-400 text-xs">支持 JPG、PNG、PDF 等格式</p>
+                        <p className="text-white font-medium text-xs mb-1">{t('dropHintTitle')}</p>
+                        <p className="text-gray-400 text-xs">{t('dropHintSubtitle')}</p>
                       </div>
                     )}
                   </div>
@@ -730,10 +985,9 @@ function App() {
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-base font-semibold text-white">原文预览</h2>
+                    <h2 className="text-base font-semibold text-white">{t('previewTitle')}</h2>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400">已用时 {(elapsedMs/1000).toFixed(2)}s</span>
-                      <button onClick={closePreview} className="text-xs px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-300 hover:text-white">关闭预览</button>
+                      <button onClick={closePreview} className="text-xs px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-gray-300 hover:text-white">{t('closePreview')}</button>
                     </div>
                   </div>
                   <div className="bg-dark-lighter rounded-lg border border-white/10 overflow-hidden" style={{
@@ -748,7 +1002,7 @@ function App() {
                         <iframe title="doc-preview" src={runPreview.url} className="w-full h-full" />
                       )
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">无可预览内容</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">{t('noPreviewText')}</div>
                     )}
                   </div>
                 </>
@@ -762,39 +1016,40 @@ function App() {
                 <div className="p-1.5 bg-secondary/20 rounded-lg">
                   <Settings className="w-4 h-4 text-secondary" />
                 </div>
-                <h2 className="text-base font-semibold text-white">配置选项</h2>
+                <h2 className="text-base font-semibold text-white">{t('configSectionTitle')}</h2>
               </div>
               
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-gray-400 mb-1.5 block">模型规格</label>
+                  <label className="text-xs text-gray-400 mb-1.5 block">{t('modeLabel')}</label>
                   <select
                     value={selectedMode}
                     onChange={(e) => setSelectedMode(e.target.value)}
                     className="w-full px-3 py-2 bg-dark-lighter border border-white/10 rounded-lg text-white text-sm cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
                   >
                     {configs.modes.map((mode) => (
-                      <option key={mode.value} value={mode.value}>{mode.label}</option>
+                      <option key={mode.value} value={mode.value}>{getModeLabel(mode)}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-400 mb-1.5 block">输出格式</label>
+                  <label className="text-xs text-gray-400 mb-1.5 block">{t('formatLabel')}</label>
                   <select
                     value={selectedFormat}
                     onChange={(e) => handleFormatChange(e.target.value)}
                     className="w-full px-3 py-2 bg-dark-lighter border border-white/10 rounded-lg text-white text-sm cursor-pointer hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                   >
                     {configs.output_formats.map((format) => (
-                      <option key={format.value} value={format.value}>{format.icon} {format.label}</option>
+                      <option key={format.value} value={format.value}>{format.icon} {getFormatLabel(format)}</option>
                     ))}
                   </select>
                   {/* 显示格式说明 */}
                   {(() => {
                     const currentFormat = currentFormatConfig
-                    return currentFormat?.description && (
-                      <p className="text-xs text-gray-500 mt-1.5">💡 {currentFormat.description}</p>
+                    const desc = getFormatDescription(currentFormat)
+                    return desc && (
+                      <p className="text-xs text-gray-500 mt-1.5">💡 {desc}</p>
                     )
                   })()}
                 </div>
@@ -809,8 +1064,8 @@ function App() {
                   
                   // input_type === 'required': 必填输入框（如 rec）
                   const isRequired = inputType === 'required'
-                  const label = isRequired ? '定位目标（必填）' : '自定义提示词（可选）'
-                  const placeholder = currentFormat?.placeholder || '留空使用默认提示词...'
+                  const label = isRequired ? t('promptLabelRequired') : t('promptLabelOptional')
+                  const placeholder = getFormatPlaceholder(currentFormat) || (language === 'en' ? 'Leave empty to use the default prompt…' : '留空使用默认提示词…')
                   
                   return (
                     <div>
@@ -830,7 +1085,7 @@ function App() {
                         rows={2}
                       />
                       {isRequired && !customPrompt.trim() && (
-                        <p className="text-xs text-amber-400 mt-1.5">⚠️ 请输入要在图片中定位的内容</p>
+                        <p className="text-xs text-amber-400 mt-1.5">⚠️ {t('promptRequiredWarning')}</p>
                       )}
                     </div>
                   )
@@ -850,12 +1105,12 @@ function App() {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>处理中...</span>
+                  <span>{t('processingButton')}</span>
                 </>
               ) : (
                 <>
                   <Zap className="w-5 h-5 group-hover:animate-pulse" />
-                  <span>开始识别</span>
+                  <span>{t('startButton')}</span>
                 </>
               )}
             </button>
@@ -867,25 +1122,34 @@ function App() {
                 className="w-full py-3 px-6 bg-red-500/10 text-red-300 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
                 disabled={isCancelling}
               >
-                {isCancelling ? '正在终止...' : '终止识别'}
+                {isCancelling ? t('cancellingButton') : t('cancelButton')}
               </button>
             )}
 
           </div>
 
           {/* Right Column - Result (统一加载与输出区域) */}
-          <div className="space-y-4 h-full flex flex-col lg:self-stretch">
+          <div className="space-y-4 h-full flex flex-col lg:self-stretch min-h-0 lg:overflow-y-auto lg:pl-2">
             {/* 缩略图区域 - 独立显示在结果框上方 */}
             {result?.pages && result.pages.length > 0 && (
               <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-semibold text-white">页面预览 ({result.streaming ? `处理中 ${result.pages.length}` : `共${result.pages.length}`}页)</p>
+                  <p className="text-sm font-semibold text-white">
+                    {t('pagePreviewTitle')} (
+                      {result.streaming
+                        ? t('thumbnailsProcessingLabel', result.pages.length)
+                        : language === 'en'
+                          ? `${result.pages.length} page${result.pages.length === 1 ? '' : 's'}`
+                          : `共${result.pages.length}页`
+                      }
+                    )
+                  </p>
                   {result.pages.length > 8 && (
                     <button
                       onClick={() => setShowAllThumbnails(!showAllThumbnails)}
                       className="text-xs px-3 py-1 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded border border-white/10 transition-all"
                     >
-                      {showAllThumbnails ? '收起' : `查看全部 (${result.pages.length})`}
+                      {showAllThumbnails ? t('collapseAll') : t('viewAll', result.pages.length)}
                     </button>
                   )}
                 </div>
@@ -894,7 +1158,7 @@ function App() {
                     <div 
                       key={idx} 
                       className="bg-dark/50 rounded border border-white/5 p-2 hover:border-primary/30 transition-all cursor-pointer group"
-                      onClick={() => page.imageUrl && setPreviewImageModal({ url: `http://localhost:8000${page.imageUrl}`, title: `第 ${page.page} 页` })}
+                      onClick={() => page.imageUrl && setPreviewImageModal({ url: `http://localhost:8000${page.imageUrl}`, title: t('pageLabel', page.page) })}
                     >
                       <div className="aspect-square mb-2 bg-dark rounded border border-white/10 overflow-hidden">
                         {page.imageUrl ? (
@@ -909,7 +1173,7 @@ function App() {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-center text-gray-300 font-medium">第 {page.page} 页</p>
+                      <p className="text-xs text-center text-gray-300 font-medium">{t('pageLabel', page.page)}</p>
                     </div>
                   ))}
                 </div>
@@ -918,33 +1182,44 @@ function App() {
 
             {/* rec模式：大图显示区域 */}
             {result?.output_format === 'rec' && result?.singleImageUrl && !result?.pages && (
-              <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in flex flex-col min-h-[480px]">
-                <div className="flex items-center justify-between mb-4">
+              <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in flex flex-col min-h-[420px]">
+                <div className="flex items-center justify-between mb-3 gap-3">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-amber-500/20 rounded-lg">
                       <Sparkles className="w-4 h-4 text-amber-400" />
                     </div>
-                    <h2 className="text-base font-semibold text-white">🎯 对象定位结果{result?.streaming ? ` · 已用时 ${(elapsedMs/1000).toFixed(2)}s` : (typeof result?.duration_ms === 'number' ? ` · 耗时 ${(result.duration_ms/1000).toFixed(2)}s` : '')}</h2>
+                    <h2 className="text-base font-semibold text-white">
+                      {t('recResultTitle')}
+                      {result?.streaming ? getStreamingTimeLabel(elapsedMs) : getDurationLabel(result?.duration_ms)}
+                    </h2>
                   </div>
+                  <button
+                    type="button"
+                    disabled={!result?.singleImageUrl}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg border border-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => handleDownloadImage(result.singleImageUrl, `rec_result_${result.timestamp || Date.now()}.jpg`)}
+                  >
+                    {t('downloadImage')}
+                  </button>
                 </div>
                 <div className="bg-dark-lighter rounded-lg p-4 border border-white/5 flex-1 flex flex-col items-center justify-center">
                   <img 
                     src={`http://localhost:8000${result.singleImageUrl}`}
-                    alt="对象定位结果"
-                    className="w-full max-h-[600px] object-contain rounded border border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setPreviewImageModal({ url: `http://localhost:8000${result.singleImageUrl}`, title: '对象定位结果 - 点击查看大图' })}
+                    alt={t('recResultTitle')}
+                    className="w-full max-h-[420px] object-contain rounded border border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setPreviewImageModal({ url: `http://localhost:8000${result.singleImageUrl}`, title: t('recResultTitle') })}
                   />
-                  <p className="text-center text-gray-400 text-xs mt-3">💡 点击图片查看完整大图</p>
+                  <p className="text-gray-400 text-xs mt-3 self-start">{t('recResultHint')}</p>
                 </div>
                 {result && (
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-                      <p className="text-primary text-xs mb-0.5">模型规格</p>
+                      <p className="text-primary text-xs mb-0.5">{t('recInfoMode')}</p>
                       <p className="text-white font-medium text-sm">{result.mode}</p>
                     </div>
                     <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                      <p className="text-accent text-xs mb-0.5">输出格式</p>
-                      <p className="text-white font-medium text-sm">🎯 对象定位</p>
+                      <p className="text-accent text-xs mb-0.5">{t('recInfoFormat')}</p>
+                      <p className="text-white font-medium text-sm">{getFormatLabel(getFormatByValue(result.output_format))}</p>
                     </div>
                   </div>
                 )}
@@ -954,33 +1229,46 @@ function App() {
             {/* 非rec模式：单图预览（缩略图） */}
             {result?.output_format !== 'rec' && result?.singleImageUrl && !result?.pages && (
               <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in">
-                <p className="text-sm font-semibold text-white mb-3">识别预览</p>
+                <div className="flex items-center justify-between mb-2 gap-3">
+                  <p className="text-sm font-semibold text-white">{t('singleImagePreviewTitle')}</p>
+                  <button
+                    type="button"
+                    disabled={!result?.singleImageUrl}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg border border-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => handleDownloadImage(result.singleImageUrl, `ocr_result_${result.timestamp || Date.now()}.jpg`)}
+                  >
+                    {t('downloadImage')}
+                  </button>
+                </div>
                 <img 
                   src={`http://localhost:8000${result.singleImageUrl}`}
                   alt="Result with boxes"
-                  className="w-full max-h-64 object-contain rounded border border-white/10 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setPreviewImageModal({ url: `http://localhost:8000${result.singleImageUrl}`, title: '识别结果' })}
+                  className="w-full max-h-56 object-contain rounded border border-white/10 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setPreviewImageModal({ url: `http://localhost:8000${result.singleImageUrl}`, title: t('resultModalTitle') })}
                 />
               </div>
             )}
 
             {/* Result Display - 文本结果区域（非rec模式才显示） */}
             {(loading || result) && result?.output_format !== 'rec' && (
-              <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in flex flex-col min-h-[480px]">
+              <div className="glass-effect rounded-2xl p-5 card-shadow animate-fade-in flex flex-col flex-1 min-h-0 lg:min-h-[420px]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-emerald-500/20 rounded-lg">
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                     </div>
-                    <h2 className="text-base font-semibold text-white">识别结果 ({(result?.text || '').length} 字符){result?.streaming ? ` · 已用时 ${(elapsedMs/1000).toFixed(2)}s` : (typeof result?.duration_ms === 'number' ? ` · 耗时 ${(result.duration_ms/1000).toFixed(2)}s` : '')}</h2>
+                    <h2 className="text-base font-semibold text-white">
+                      {t('recognitionResultTitle')} ({getCharacterCountLabel(displayText.length)})
+                      {result?.streaming ? getStreamingTimeLabel(elapsedMs) : getDurationLabel(result?.duration_ms)}
+                    </h2>
                     {result?.streaming && (
                       <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full animate-pulse">
-                        {result.currentPage ? `处理中 ${result.currentPage}/${result.totalPages}页` : '实时更新中...'}
+                        {result.currentPage ? (language === 'en' ? `Processing ${result.currentPage}/${result.totalPages}` : `处理中 ${result.currentPage}/${result.totalPages}页`) : t('liveUpdating')}
                       </span>
                     )}
                   </div>
-                  {!result?.text ? (
-                    <div className="text-xs text-gray-500">等待结果...</div>
+                  {displayText.length === 0 ? (
+                    <div className="text-xs text-gray-500">{t('waitingForResult')}</div>
                   ) : (
                     <div className="flex items-center gap-2" style={{position: 'relative', zIndex: 10}}>
                       <button
@@ -992,7 +1280,7 @@ function App() {
                         }`}
                       >
                         {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copied ? '已复制' : '复制'}
+                        {copied ? t('copiedButton') : t('copyButton')}
                       </button>
                       <button
                         onClick={handleExport}
@@ -1000,17 +1288,17 @@ function App() {
                         className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        导出
+                        {t('exportButton')}
                       </button>
                     </div>
                   )}
                 </div>
                 
-                <div className="bg-dark-lighter rounded-lg p-4 border border-white/5 overflow-y-auto scrollbar-custom flex-1 min-h-0 max-h-[500px]">
-                  {loading && !(result?.text && result.text.length > 0) ? (
+                <div className="bg-dark-lighter rounded-lg p-4 border border-white/5 overflow-y-auto scrollbar-custom flex-1 min-h-0 max-h-[60vh] lg:max-h-[55vh]">
+                  {loading && displayText.length === 0 ? (
                     <div className="w-full py-8 flex flex-col items-center justify-center text-center">
                       <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-                      <p className="text-white text-xs">AI正在处理中...</p>
+                      <p className="text-white text-xs">{t('loadingText')}</p>
                     </div>
                   ) : (
                     <>
@@ -1020,7 +1308,7 @@ function App() {
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[rehypeRaw]}
                         >
-                          {result?.text || ''}
+                          {displayText}
                         </ReactMarkdown>
                       </div>
                     </>
@@ -1030,12 +1318,12 @@ function App() {
                 {result && (
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-                      <p className="text-primary text-xs mb-0.5">模型规格</p>
+                      <p className="text-primary text-xs mb-0.5">{t('recInfoMode')}</p>
                       <p className="text-white font-medium text-sm">{result.mode}</p>
                     </div>
                     <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                      <p className="text-accent text-xs mb-0.5">输出格式</p>
-                      <p className="text-white font-medium text-sm">{result.output_format}</p>
+                      <p className="text-accent text-xs mb-0.5">{t('recInfoFormat')}</p>
+                      <p className="text-white font-medium text-sm">{getFormatLabel(getFormatByValue(result.output_format))}</p>
                     </div>
                   </div>
                 )}
@@ -1048,8 +1336,8 @@ function App() {
                 <div className="w-20 h-20 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <div className="w-10 h-10 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <p className="text-white text-base font-medium mb-2">🎯 正在定位对象...</p>
-                <p className="text-gray-400 text-xs">处理完成后将显示带标注框的图片</p>
+                <p className="text-white text-base font-medium mb-2">{t('recLoadingTitle')}</p>
+                <p className="text-gray-400 text-xs">{t('recLoadingSubtitle')}</p>
               </div>
             )}
 
@@ -1059,8 +1347,8 @@ function App() {
                 <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="w-10 h-10 text-primary/50" />
                 </div>
-                <p className="text-gray-400 text-base font-medium mb-2">识别结果将显示在这里</p>
-                <p className="text-gray-500 text-xs">上传文件并配置选项后，点击"开始识别"按钮</p>
+                <p className="text-gray-400 text-base font-medium mb-2">{t('placeholderHeading')}</p>
+                <p className="text-gray-500 text-xs">{t('placeholderBody')}</p>
               </div>
             )}
           </div>
@@ -1079,7 +1367,7 @@ function App() {
                 onClick={() => setPreviewImageModal(null)}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm transition-all"
               >
-                关闭
+                {t('modalClose')}
               </button>
             </div>
             <div className="flex items-center justify-center h-full">
@@ -1108,12 +1396,12 @@ function App() {
             <Check className="w-6 h-6 flex-shrink-0" />
             <div>
               <p className="font-semibold text-sm">
-                {result?.output_format === 'rec' ? '🎯 定位完成！' : '✅ 识别完成！'}
+                {result?.output_format === 'rec' ? t('toastRecComplete') : t('toastOcrComplete')}
               </p>
               <p className="text-xs opacity-90">
-                耗时 {typeof result?.duration_ms === 'number' ? (result.duration_ms/1000).toFixed(2) : '0'}秒
-                {result?.output_format !== 'rec' && ` · ${result?.text?.length || 0}字符`}
-                {result?.output_format === 'rec' && ' · 已生成标注图片'}
+                {t('toastDuration', typeof result?.duration_ms === 'number' ? (result.duration_ms / 1000).toFixed(2) : '0')}
+                {result?.output_format !== 'rec' && ` · ${t('toastCharacters', displayText.length)}`}
+                {result?.output_format === 'rec' && ` · ${t('toastImageReady')}`}
               </p>
             </div>
           </div>
@@ -1126,29 +1414,29 @@ function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* About */}
             <div>
-              <h3 className="text-white font-semibold mb-3 text-sm">关于项目</h3>
+              <h3 className="text-white font-semibold mb-3 text-sm">{t('footerAboutTitle')}</h3>
               <p className="text-gray-400 text-xs leading-relaxed">
-                基于 DeepSeek-OCR 的智能文本识别平台，提供高精度的 OCR 识别服务，支持多种文档格式和输出方式。
+                {t('footerAboutBody')}
               </p>
             </div>
 
             {/* Links */}
             <div>
-              <h3 className="text-white font-semibold mb-3 text-sm">相关链接</h3>
+              <h3 className="text-white font-semibold mb-3 text-sm">{t('footerLinksTitle')}</h3>
               <ul className="space-y-2 text-xs">
                 <li>
                   <a href="https://github.com/deepseek-ai/DeepSeek-OCR" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors">
-                    GitHub 仓库
+                    {t('footerLinkGithub')}
                   </a>
                 </li>
                 <li>
                   <a href="https://huggingface.co/deepseek-ai/DeepSeek-OCR" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors">
-                    Hugging Face 模型
+                    {t('footerLinkModel')}
                   </a>
                 </li>
                 <li>
                   <a href="https://www.deepseek.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors">
-                    DeepSeek 官网
+                    {t('footerLinkWebsite')}
                   </a>
                 </li>
               </ul>
@@ -1156,18 +1444,16 @@ function App() {
 
             {/* Contact */}
             <div>
-              <h3 className="text-white font-semibold mb-3 text-sm">开发团队</h3>
-              <p className="text-gray-400 text-xs mb-2">二号小明实验室</p>
-              <p className="text-gray-500 text-xs">专注于 AI 技术研究与应用开发</p>
+              <h3 className="text-white font-semibold mb-3 text-sm">{t('footerTeamTitle')}</h3>
+              <p className="text-gray-400 text-xs mb-2">{t('footerTeamName')}</p>
+              <p className="text-gray-500 text-xs">{t('footerTeamDescription')}</p>
             </div>
           </div>
 
           {/* Copyright */}
           <div className="border-t border-white/5 pt-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-              <p className="text-gray-500 text-xs">
-                © 2024 二号小明实验室. All rights reserved.
-              </p>
+              <p className="text-gray-500 text-xs">{t('footerCopyright')}</p>
               <p className="text-gray-500 text-xs">
                 Powered by <span className="text-primary font-medium">DeepSeek-OCR</span>
               </p>
