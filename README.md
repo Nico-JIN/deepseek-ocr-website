@@ -1,8 +1,6 @@
 <div align=" center\>
 
-# DeepSeek-OCR 智能识别平台
-
-跨端一体的 OCR 识别实验平台，集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
+DeepSeek-OCR-WebSite集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
 <img width="1540" height="913" alt="QQ_1761210498105" src="https://github.com/user-attachments/assets/5aa7db33-6c98-4701-b218-4a72b6e96a6f" />
 
 
@@ -10,10 +8,7 @@
 </div>
 
 ## 🎯 项目亮点
-<img width="721" height="501" alt="QQ_1761210265802" src="https://github.com/user-attachments/assets/74824587-d168-4867-899e-df43c5beefe0" />
-
-
-- **全链路方案**：Python FastAPI 后端 + React 前端，开箱即用的 OCR/定位平台。
+<img width="1609" height="912" alt="QQ_1761210214977" src="https://github.com/user-attachments/assets/94d99033-6a17-4bef-8188-3053270f8bb0" />
 - **多格式识别**：支持 Markdown、结构化 OCR、自由识别、图表解析、对象定位等多种输出。
 - **实时流式体验**：识别进度通过 SSE 实时推送，页面即时更新文本与缩略图。
 - **任务控制**：支持一键取消正在运行的识别任务，前后端联动及时反馈。
@@ -44,7 +39,7 @@ DeepSeek-OCR-1/
 
 | 组件 | 版本建议 |
 |-----------------|---------------------------|
-| Python | 3.9+ |
+| Python | 3.12+ |
 | Node.js | 18+ |
 | npm / pnpm | npm 9+（示例使用 npm） |
 | GPU (建议) | NVIDIA / CUDA11+（可选） |
@@ -53,14 +48,14 @@ DeepSeek-OCR-1/
 
 ### 1. 克隆项目
 
-`ash
+`bash
 git clone https://github.com/<your-org>/DeepSeek-OCR-1.git
 cd DeepSeek-OCR-1
 `
 
 ### 2. 配置后端
 
-`ash
+`bash
 # 创建虚拟环境（推荐）
 python -m venv .venv
 \\.venv\\Scripts\\activate # Windows
@@ -74,11 +69,11 @@ python backend/main.py
 # 默认监听地址： http://localhost:8000
 `
 
+
 > 说明：后端提供 REST 接口、SSE 流、任务取消 /api/ocr/cancel 等服务，并负责将识别结果写入 uploads/output。
 
 ### 3. 启动前端
 
-`ash
 cd frontend
 npm install
 npm run dev
@@ -108,7 +103,6 @@ npm run preview # 预览打包结果
  - 自由识别（无布局）
  - 图表解析
  - 对象定位（返回标注图片）
- - <img width="1609" height="912" alt="QQ_1761210214977" src="https://github.com/user-attachments/assets/94d99033-6a17-4bef-8188-3053270f8bb0" />
 - **自定义提示词**：按格式自动判断是否必填，并在切换时重置无效提示词。
 
   
@@ -144,15 +138,6 @@ pm run build 与后端单元测试脚本。
 2. 创建特性分支 git checkout -b feature/xxx。
 3. 提交变更并发起 Pull Request，简述目的与影响。
 4. 在 PR 中附加相关截图或测试结果。
-
-## 📜 许可证
-
-本项目遵循原始 DeepSeek-OCR 仓库同款许可证（详见 [LICENSE](./LICENSE)）。请在分发或商用前确认合规事项。
-
-## 📞 支持与反馈
-
-- 提交 Issue：欢迎在 GitHub Issues 中反馈 Bug / 新需求。
-- 技术讨论：可在仓库讨论区交流优化思路与部署经验。
 
 > 若需企业级定制或模型部署支持，请联系团队邮箱：support@example.com。
 
