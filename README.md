@@ -1,150 +1,215 @@
-﻿<div align=" center\>
-
 # DeepSeek-OCR 智能识别平台
 
-跨端一体的 OCR 识别实验平台，集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
+基于 DeepSeek-OCR 模型的 OCR 识别平台，集成 FastAPI 后端与 React 前端，提供实时流式识别、多语言界面、对象定位等功能。
 
-</div>
+## 📋 项目简介
 
-## 🎯 项目亮点
+一个开箱即用的 OCR 识别平台，支持：
+- ✨ 多格式输出：Markdown、结构化 OCR、图表解析、对象定位
+- 🚀 实时流式识别，进度实时推送
+- 🌍 中英双语界面切换
+- 🎯 任务取消控制
+- 📄 支持图片与 PDF 文档识别
 
-- **全链路方案**：Python FastAPI 后端 + React 前端，开箱即用的 OCR/定位平台。
-- **多格式识别**：支持 Markdown、结构化 OCR、自由识别、图表解析、对象定位等多种输出。
-- **实时流式体验**：识别进度通过 SSE 实时推送，页面即时更新文本与缩略图。
-- **任务控制**：支持一键取消正在运行的识别任务，前后端联动及时反馈。
-- **结果管理**：识别完成可一键复制、导出文本或下载标注图片。
-- **国际化界面**：内置中/英双语切换，界面提示与提示词同步翻译。
-- **UI 优化**：暗色玻璃拟态风格、左右等高布局、自适应滚动与图片预览。
+## 🔧 环境要求
 
-## 🏗️ 架构总览
-
-`
-DeepSeek-OCR-1/
-├── backend/ # FastAPI 后端服务
-│ ├── main.py # 入口：API、SSE、任务管理
-│ ├── ocr_service.py # 业务层：调度模型、处理多页 PDF
-│ └── ... # 日志、配置、模型适配等
-├── frontend/ # React + Vite 前端应用
-│ ├── src/App.jsx # 主界面，上传、识别、结果展示
-│ ├── src/components/ # Header 等功能组件
-│ └── ... # 样式、静态资源
-├── deepseek-ocr/ # 模型适配与推理封装
-├── assets/ # 演示资源
-├── uploads/ # 运行时上传/输出目录
-├── requirements.txt # 后端依赖
-└── READ.md # 本文档
-`
-
-## 🔧 环境依赖
-
-| 组件 | 版本建议 |
-|-----------------|---------------------------|
+| 组件 | 版本 |
+|------|------|
 | Python | 3.9+ |
 | Node.js | 18+ |
-| npm / pnpm | npm 9+（示例使用 npm） |
-| GPU (建议) | NVIDIA / CUDA11+（可选） |
+| CUDA | 11+ (推荐) |
+| GPU内存 | 8GB+ (推荐) |
 
-## 🚀 快速开始
+## 📦 安装步骤
 
 ### 1. 克隆项目
 
-`ash
-git clone https://github.com/<your-org>/DeepSeek-OCR-1.git
+```bash
+git clone https://github.com/your-repo/DeepSeek-OCR-1.git
 cd DeepSeek-OCR-1
-`
+```
 
-### 2. 配置后端
+### 2. 安装后端依赖
 
-`ash
-# 创建虚拟环境（推荐）
-python -m venv .venv
-\\.venv\\Scripts\\activate # Windows
-
-# 安装依赖
+```bash
+# 安装 Python 依赖（根目录）
 pip install -r requirements.txt
 
-# 首次运行会自动下载/加载模型（耗时取决于网络）
-python backend/main.py
+# 进入后端目录，安装后端特定依赖
+cd backend
+pip install -r requirements.txt
+cd ..
+```
 
-# 默认监听地址： http://localhost:8000
-`
+**主要依赖包：**
+- fastapi
+- uvicorn
+- torch
+- transformers
+- PyMuPDF
+- Pillow
 
-> 说明：后端提供 REST 接口、SSE 流、任务取消 /api/ocr/cancel 等服务，并负责将识别结果写入 uploads/output。
+### 3. 安装前端依赖
 
-### 3. 启动前端
-
-`ash
+```bash
 cd frontend
 npm install
+cd ..
+```
+
+## 🤖 模型下载
+
+模型存放位置：`DeepSeek-OCR-master/DeepSeek-OCR-hf/`
+
+**方式一：手动下载**
+1. 访问 [DeepSeek-OCR HuggingFace](https://huggingface.co/deepseek-ai/deepseek-ocr)
+2. 下载模型文件到 `DeepSeek-OCR-master/DeepSeek-OCR-hf/` 目录
+
+**方式二：自动下载**
+- 首次启动后端时，程序会自动从 HuggingFace 下载模型（需要网络连接）
+- 下载时间取决于网络速度（模型约几GB）
+
+## 🚀 运行步骤
+
+### 启动后端
+
+**Windows:**
+```bash
+cd backend
+start.bat
+```
+
+**Linux/Mac:**
+```bash
+cd backend
+chmod +x start.sh
+./start.sh
+```
+
+**或手动启动:**
+```bash
+cd backend
+python main.py
+```
+
+后端默认运行在：`http://localhost:8000`
+
+### 启动前端
+
+**Windows:**
+```bash
+cd frontend
+start.bat
+```
+
+**Linux/Mac:**
+```bash
+cd frontend
+chmod +x start.sh
+./start.sh
+```
+
+**或手动启动:**
+```bash
+cd frontend
 npm run dev
+```
 
-# 默认开发端口： http://localhost:5173
-`
+前端默认运行在：`http://localhost:5173`
 
-前端会自动请求 http://localhost:8000 获取配置及流式数据，可在 .env 文件中自定义接口地址（如需部署到其他域名）。
+## 🎨 使用说明
 
-### 4. 生产构建
+1. 打开浏览器访问 `http://localhost:5173`
+2. 上传图片或 PDF 文件
+3. 选择识别模式和输出格式
+4. 点击"开始识别"，实时查看识别结果
+5. 识别完成后可复制、导出或下载结果
 
-`ash
-npm run build
-npm run preview # 预览打包结果
-`
+## ⚠️ 常见问题
 
-## 📦 功能详解
+### 1. 模型加载失败
+**问题：** 启动后端时提示模型文件找不到  
+**解决：**
+- 检查 `DeepSeek-OCR-master/DeepSeek-OCR-hf/` 目录是否存在模型文件
+- 确保网络连接正常，让程序自动下载模型
+- 手动下载模型到指定目录
 
-- **文件上传**：支持拖拽或点击上传，自动生成图片/PDF 预览。
-- **模式选择**：提供 Tiny/Base/Gundam 等模型规格，按需组合分辨率与性能。
-- **输出格式**：
- - Markdown 文档
- - OCR 布局文本
- - 自由识别（无布局）
- - 图表解析
- - 对象定位（返回标注图片）
-- **自定义提示词**：按格式自动判断是否必填，并在切换时重置无效提示词。
-- **识别控制**：
- - SSE 流式更新文本/图片缩略图
- - 右上角可一键终止正在运行的任务
-- **结果展示**：
- - 文本区支持滚动浏览、Markdown 渲染、复制、导出
- - 图像区支持放大预览、下载标注图片
-- **国际化 & 设置**：Header 下拉菜单切换中/英文，系统提示同步翻译。
+### 2. CUDA 内存不足
+**问题：** 运行时报 "CUDA out of memory"  
+**解决：**
+- 降低输入图片分辨率
+- 使用更小的模型规格
+- 关闭其他占用 GPU 的程序
+- 使用 CPU 模式运行（修改 `backend/ocr_service.py` 中的设备设置）
 
-## 🧪 测试与验证
+### 3. 端口已被占用
+**问题：** 启动时提示端口 8000 或 5173 被占用  
+**解决：**
+```bash
+# Windows 查找占用端口的进程
+netstat -ano | findstr :8000
+taskkill /PID <进程ID> /F
 
-`ash
-# 前端构建检查（示例）
-npm run build --prefix frontend
+# Linux/Mac
+lsof -i :8000
+kill -9 <进程ID>
+```
+或修改配置文件更换端口
 
-# 根据需要补充单元测试 / E2E / Lint 任务
-`
+### 4. 前端无法连接后端
+**问题：** 前端显示连接错误  
+**解决：**
+- 确认后端已成功启动
+- 检查防火墙设置
+- 确认 `frontend/.env` 中的 API 地址配置正确
 
-> 如接入 CI/CD，建议在流水线中增加前端 
-pm run build 与后端单元测试脚本。
+### 5. 依赖安装失败
+**问题：** pip install 时报错  
+**解决：**
+```bash
+# 使用清华镜像源
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-## 📁 运行目录说明
+# 升级 pip
+python -m pip install --upgrade pip
+```
 
-- uploads/input：上传文件存放位置。
-- uploads/output：识别结果（文本/图片/Markdown）。
-- ackend/logs：运行日志（如开启）。
+### 6. Node.js 依赖安装慢
+**问题：** npm install 很慢或失败  
+**解决：**
+```bash
+# 使用淘宝镜像
+npm install --registry=https://registry.npmmirror.com
 
-## 🤝 贡献指南
+# 或使用 cnpm
+npm install -g cnpm --registry=https://registry.npmmirror.com
+cnpm install
+```
 
-1. Fork & clone 项目。
-2. 创建特性分支 git checkout -b feature/xxx。
-3. 提交变更并发起 Pull Request，简述目的与影响。
-4. 在 PR 中附加相关截图或测试结果。
+## 📁 项目结构
 
-## 📜 许可证
+```
+DeepSeek-OCR-1/
+├── backend/                 # FastAPI 后端
+│   ├── main.py             # API 入口
+│   ├── ocr_service.py      # OCR 服务
+│   ├── start.bat           # Windows 启动脚本
+│   └── start.sh            # Linux/Mac 启动脚本
+├── frontend/               # React 前端
+│   ├── src/                # 源代码
+│   ├── start.bat           # Windows 启动脚本
+│   └── start.sh            # Linux/Mac 启动脚本
+├── DeepSeek-OCR-master/    # 模型文件目录
+│   └── DeepSeek-OCR-hf/    # HuggingFace 模型
+├── uploads/                # 上传文件目录
+├── requirements.txt        # Python 依赖
+└── README.md               # 项目文档
+```
 
-本项目遵循原始 DeepSeek-OCR 仓库同款许可证（详见 [LICENSE](./LICENSE)）。请在分发或商用前确认合规事项。
+## 📄 许可证
 
-## 📞 支持与反馈
-
-- 提交 Issue：欢迎在 GitHub Issues 中反馈 Bug / 新需求。
-- 技术讨论：可在仓库讨论区交流优化思路与部署经验。
-
-> 若需企业级定制或模型部署支持，请联系团队邮箱：support@example.com。
+详见 [LICENSE](./LICENSE) 文件
 
 ---
 
-愿你在 DeepSeek-OCR 的世界里，探索图文理解的更多可能性！
+💡 **提示：** 首次运行需要下载模型，请耐心等待。如有问题，请查看上方常见问题或提交 Issue。
