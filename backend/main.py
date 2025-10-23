@@ -68,7 +68,7 @@ async def get_configs():
             {"value": "free_ocr", "label": "自由识别（无布局）", "prompt": "<image>\nFree OCR.", "requires_input": False, "input_type": "optional"},
             {"value": "figure", "label": "图表解析", "prompt": "<image>\nParse the figure.", "requires_input": False, "input_type": "optional"},
             {"value": "general", "label": "详细描述", "prompt": "<image>\nDescribe this image in detail.", "requires_input": False, "input_type": "none", "description": "返回图片的详细文本描述"},
-            {"value": "rec", "label": "对象定位", "prompt": "<image>\nLocate <|ref|>{target}<|/ref|> in the image.", "requires_input": True, "input_type": "required", "description": "返回带标注框的图片", "placeholder": "请输入要定位的内容，如：红色按钮、标题文字等"}
+            {"value": "rec", "label": "对象定位", "prompt": "<image>\n<|grounding|>Locate <|ref|>{target}<|/ref|> in the image.", "requires_input": True, "input_type": "required", "description": "返回带标注框的图片", "placeholder": "请输入要定位的内容，如：红色按钮、标题文字等"}
         ],
         "default_mode": "base",
         "default_format": "markdown"

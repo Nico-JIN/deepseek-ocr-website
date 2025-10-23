@@ -97,7 +97,7 @@ class OCRService:
         if fmt == "rec":
             if custom_prompt and custom_prompt.strip():
                 target = custom_prompt.strip()
-                prompt = f"<image>\nLocate <|ref|>{target}<|/ref|> in the image."
+                prompt = f"<image>\n<|grounding|>Locate <|ref|>{target}<|/ref|> in the image."
                 print(f"🎯 Using rec prompt with target: {target}")
                 return prompt
             raise ValueError("rec 模式需要指定定位目标（custom_prompt不能为空）")
