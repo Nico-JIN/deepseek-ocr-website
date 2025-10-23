@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+PyMuPDF
+img2pdf
+einops
+easydict
+addict
+Pillow
+python-jose[cryptography]==3.3.0
+aiofiles==24.1.0
+torch

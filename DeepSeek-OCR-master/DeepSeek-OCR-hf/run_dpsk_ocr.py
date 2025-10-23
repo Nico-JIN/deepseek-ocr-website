@@ -5,8 +5,10 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
-
-model_name = 'deepseek-ai/DeepSeek-OCR'
+print(torch.__version__)
+print(torch.cuda.device_count())  # 显示可见 GPU 数量
+print(torch.cuda.is_available()) 
+model_name = 'D:\\models\\deepseek-ocr\\'
 
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -16,9 +18,10 @@ model = model.eval().cuda().to(torch.bfloat16)
 
 
 # prompt = "<image>\nFree OCR. "
-prompt = "<image>\n<|grounding|>Convert the document to markdown. "
-image_file = 'your_image.jpg'
-output_path = 'your/output/dir'
+#prompt = "<image>\n<|grounding|>解析该图片内容"
+prompt = "<image>\nParse the figure."
+image_file = 'D:\\models\\DeepSeek-OCR-1\\DeepSeek-OCR-master\\DeepSeek-OCR-hf\\1761035474.png'
+output_path = 'D:\\models\\DeepSeek-OCR-1\\DeepSeek-OCR-master\\DeepSeek-OCR-hf'
 
 
 
@@ -32,3 +35,4 @@ output_path = 'your/output/dir'
 # Gundam: base_size = 1024, image_size = 640, crop_mode = True
 
 res = model.infer(tokenizer, prompt=prompt, image_file=image_file, output_path = output_path, base_size = 1024, image_size = 640, crop_mode=True, save_results = True, test_compress = True)
+
