@@ -19,7 +19,7 @@
 ## 📄 分页式实时识别
 > 如一份pdf有多页，可进行边解析边显示，并显示视觉标记。
 <img width="2162" height="1218" alt="QQ_1761221635984" src="https://github.com/user-attachments/assets/73f9cb52-48d2-4e55-badb-21f423224aad" />
-<img width="846" height="1208" alt="QQ_1761222292828" src="https://github.com/user-attachments/assets/5b1493e1-de12-45d3-9766-76d8c4af1ca7" />
+<img width="256" height="512" alt="QQ_1761222292828" src="https://github.com/user-attachments/assets/5b1493e1-de12-45d3-9766-76d8c4af1ca7" />
 
 ## 📁 项目结构
 
@@ -47,7 +47,7 @@ DeepSeek-OCR-1/
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-repo/DeepSeek-OCR-1.git
+git clone https://github.com/Nico-JIN/deepseek-ocr-website.git
 cd DeepSeek-OCR-1
 ```
 
