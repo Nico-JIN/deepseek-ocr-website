@@ -1,6 +1,6 @@
-<div align=" center\>
 
-DeepSeek-OCR-WebSite集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
+
+# DeepSeek-OCR-WebSite集成 DeepSeek-OCR 模型，提供多语言界面、实时流式识别、对象定位与取消控制等能力。
 <img width="1540" height="913" alt="QQ_1761210498105" src="https://github.com/user-attachments/assets/5aa7db33-6c98-4701-b218-4a72b6e96a6f" />
 
 
