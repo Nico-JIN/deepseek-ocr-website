@@ -19,7 +19,8 @@
 ## 📄 分页式实时识别
 > 如一份pdf有多页，可进行边解析边显示，并显示视觉标记。
 <img width="2162" height="1218" alt="QQ_1761221635984" src="https://github.com/user-attachments/assets/73f9cb52-48d2-4e55-badb-21f423224aad" />
-<img width="256" height="512" alt="QQ_1761222292828" src="https://github.com/user-attachments/assets/5b1493e1-de12-45d3-9766-76d8c4af1ca7" />
+<img width="1236" height="870" alt="QQ_1761222810862" src="https://github.com/user-attachments/assets/4a4c3f74-c817-42c7-8e1b-f72906c230d2" />
+
 
 ## 📁 项目结构
 
