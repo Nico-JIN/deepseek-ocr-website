@@ -69,10 +69,9 @@ const STRINGS = {
     footerLinkGithub: 'GitHub Repository',
     footerLinkModel: 'Hugging Face Model',
     footerLinkWebsite: 'DeepSeek Website',
-    footerTeamTitle: 'Team',
-    footerTeamName: 'No.2 Xiaoming Lab',
-    footerTeamDescription: 'Dedicated to AI research and product development.',
-    footerCopyright: '© 2024 No.2 Xiaoming Lab. All rights reserved.',
+   
+    
+   
     alertSelectFile: 'Please select a file first',
     alertBackendOffline: 'Backend service is offline. Start the backend server and try again.',
     alertRecPromptRequired: 'Please enter the target you want to locate in the image',
@@ -150,10 +149,8 @@ const STRINGS = {
     footerLinkGithub: 'GitHub 仓库',
     footerLinkModel: 'Hugging Face 模型',
     footerLinkWebsite: 'DeepSeek 官网',
-    footerTeamTitle: '开发团队',
-    footerTeamName: '二号小明实验室',
-    footerTeamDescription: '专注于 AI 技术研究与应用开发',
-    footerCopyright: '© 2024 二号小明实验室. 保留所有权利。',
+ 
+    
     alertSelectFile: '请先选择文件',
     alertBackendOffline: '后端服务未启动。请先启动后端服务后再试。',
     alertRecPromptRequired: '请输入要在图片中定位的内容',
@@ -1444,9 +1441,8 @@ function App() {
 
             {/* Contact */}
             <div>
-              <h3 className="text-white font-semibold mb-3 text-sm">{t('footerTeamTitle')}</h3>
-              <p className="text-gray-400 text-xs mb-2">{t('footerTeamName')}</p>
-              <p className="text-gray-500 text-xs">{t('footerTeamDescription')}</p>
+              
+              
             </div>
           </div>
 
