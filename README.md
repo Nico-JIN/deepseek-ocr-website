@@ -1,7 +1,7 @@
-﻿# DeepSeek-OCR 智能识别平台
+﻿# DeepSeek-OCR-WebSite 智能识别平台
 
 基于 DeepSeek-OCR 模型的 OCR 识别平台，集成 FastAPI 后端与 React 前端，提供实时流式识别、多语言界面、对象定位等功能。
-<img width="2316" height="1267" alt="QQ_1761220455659" src="https://github.com/user-attachments/assets/d1acce55-6586-4d0b-b1ed-df6dc7c81cad" />
+<img width="1360" height="804" alt="QQ_1761286542973" src="https://github.com/user-attachments/assets/ac44ec4c-a2dd-45e1-9413-c4602c9ba513" />
 
 ## 📋 项目简介
 
