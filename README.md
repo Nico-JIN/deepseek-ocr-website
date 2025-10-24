@@ -1,7 +1,7 @@
-﻿# DeepSeek-OCR 智能识别平台
+﻿# DeepSeek-OCR-WebSite 智能识别平台
 
 基于 DeepSeek-OCR 模型的 OCR 识别平台，集成 FastAPI 后端与 React 前端，提供实时流式识别、多语言界面、对象定位等功能。
-<img width="2316" height="1267" alt="QQ_1761220455659" src="https://github.com/user-attachments/assets/d1acce55-6586-4d0b-b1ed-df6dc7c81cad" />
+<img width="1360" height="804" alt="QQ_1761286542973" src="https://github.com/user-attachments/assets/ac44ec4c-a2dd-45e1-9413-c4602c9ba513" />
 
 ## 📋 项目简介
 
@@ -19,7 +19,7 @@
 ## 📄 分页式实时识别
 > 如一份pdf有多页，可进行边解析边显示，并显示视觉标记。
 <img width="2162" height="1218" alt="QQ_1761221635984" src="https://github.com/user-attachments/assets/73f9cb52-48d2-4e55-badb-21f423224aad" />
-<img width="1236" height="870" alt="QQ_1761222810862" src="https://github.com/user-attachments/assets/4a4c3f74-c817-42c7-8e1b-f72906c230d2" />
+<img width="1278" height="870" alt="QQ_1761222810862" src="https://github.com/user-attachments/assets/4a4c3f74-c817-42c7-8e1b-f72906c230d2" />
 
 
 ## 📁 项目结构
@@ -75,11 +75,21 @@ cd ..
 
 ## 🤖 模型下载
 
-模型存放位置：`DeepSeek-OCR-master/DeepSeek-OCR-hf/`
+模型存放位置：`models/`
 
 **方式一：手动下载**
 1. 访问 [DeepSeek-OCR HuggingFace](https://huggingface.co/deepseek-ai/deepseek-ocr)
-2. 下载模型文件到 `DeepSeek-OCR-master/DeepSeek-OCR-hf/` 目录
+2. 下载模型文件到 `models/` 目录
+3. 配置本地模型
+   ```bash
+   # 所在目录 /backend/ocr_Service.py中
+   class OCRService:
+    def __init__(self):
+        self.model = None
+        self.tokenizer = None
+        self.model_name = '修改为自己的本地模型存储路径' 
+        self._ready = False
+   ```
 
 **方式二：自动下载**
 - 首次启动后端时，程序会自动从 HuggingFace 下载模型（需要网络连接）
