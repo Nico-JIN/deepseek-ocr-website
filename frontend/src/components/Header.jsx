@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { Wifi, WifiOff, Github, Settings } from 'lucide-react'
-import logo from '../logo.svg'
+import { Wifi, WifiOff, Github, Settings, Sparkles } from 'lucide-react'
 
 const Header = ({ backendAvailable = false, language = 'en', onLanguageChange = () => {}, labels = {} }) => {
   const [open, setOpen] = useState(false)
@@ -14,15 +13,11 @@ const Header = ({ backendAvailable = false, language = 'en', onLanguageChange = 
     <header className="border-b border-white/5 bg-dark/50 backdrop-blur-xl sticky top-0 z-50">
       <div className="container mx-auto px-6 py-5 max-w-7xl">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center space-x-4">
-            <div className="relative flex items-center">
-              <img src={logo} alt="DeepSeek AI" className="h-10" />
+          {/* Title with Icon */}
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-lg">
+              <Sparkles className="w-6 h-6 text-primary" />
             </div>
-          </div>
-
-          {/* Center Title */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
               {labels.title}
             </h1>

@@ -10,3 +10,4 @@ Pillow
 python-jose[cryptography]==3.3.0
 aiofiles==24.1.0
 torch
+PyYAML>=6.0

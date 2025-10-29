@@ -1,0 +1,44 @@
+# DeepSeek-OCR 配置文件
+
+# 模型配置
+model:
+  # 模型来源: "huggingface" | "modelscope" | "local"
+  source: "local"
+  
+  # Huggingface 配置
+  huggingface:
+    model_name: "deepseek-ai/deepseek-ocr"
+    # 可选：使用镜像加速
+    # mirror: "https://hf-mirror.com"
+  
+  # ModelScope 配置
+  modelscope:
+    model_name: "deepseek-ai/deepseek-ocr"
+  
+  # 本地模型配置
+  local:
+    model_path: "D:\\models\\deepseek-ocr\\"   # D:\\models\\deepseek-ocr\\
+  
+  # 通用模型加载参数
+  load_params:
+    trust_remote_code: true
+    use_safetensors: true
+    attn_implementation: "flash_attention_2"
+    torch_dtype: "bfloat16"  # "float32" | "float16" | "bfloat16"
+    device: "cuda"  # "cuda" | "cpu"
+    cuda_visible_devices: "0"  # GPU 设备ID，多卡用逗号分隔 "0,1"
+
+# 服务配置
+service:
+  host: "0.0.0.0"
+  port: 8000
+  
+  # 文件上传配置
+  upload:
+    max_file_size_mb: 100
+    allowed_extensions: [".jpg", ".jpeg", ".png", ".pdf", ".bmp", ".tiff", ".webp"]
+  
+  # 处理超时配置
+  timeout:
+    default_seconds: 300
+    per_page_seconds: 60

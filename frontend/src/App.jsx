@@ -3,7 +3,9 @@ import axios from 'axios'
 import { Upload, Settings, Sparkles, Zap, Copy, Check, Download } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import Header from './components/Header'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -286,9 +288,54 @@ function App() {
 
   const sanitizeDisplayText = useCallback((text) => {
     if (!text) return ''
+    
+    // 调试日志
+    console.log('🔍 原始文本（前100字符）:', text.substring(0, 100))
+    console.log('🔍 包含 \\$:', text.includes('\\$'))
+    
     let sanitized = text
       .replace(/^[\t >*-]*[A-Za-z0-9_\- ]+\s*\(boxes:[^)]*\)\s*(\r?\n)?/gm, '')
       .replace(/\(boxes:[^)]*\)/g, '')
+    
+    // 关键修复：移除美元符号前的反斜杠转义
+    // \$ → $ (允许 LaTeX 公式被正确识别)
+    const beforeReplace = sanitized
+    sanitized = sanitized.replace(/\\\$/g, '$')
+    
+    // 调试日志
+    if (beforeReplace !== sanitized) {
+      console.log('✅ 已移除反斜杠转义')
+      console.log('  替换前:', beforeReplace.substring(0, 100))
+      console.log('  替换后:', sanitized.substring(0, 100))
+    } else if (text.includes('\\$')) {
+      console.log('⚠️  文本包含 \\$ 但没有被替换！')
+    }
+    
+    // 将 LaTeX 公式的 [...] 转换为 $$...$$
+    // 处理块级公式：\[ ... \] 或 [ ... ]
+    sanitized = sanitized.replace(/\\\[\s*/g, '$$\n')  // \[ 转为 $$
+    sanitized = sanitized.replace(/\s*\\\]/g, '\n$$')   // \] 转为 $$
+    
+    // 处理独立的方括号公式（前后有空白或换行）
+    sanitized = sanitized.replace(/(?:^|\n)\s*\[\s*/g, '\n$$\n')  // 开头的 [
+    sanitized = sanitized.replace(/\s*\](?:\s*\n|$)/g, '\n$$\n')  // 结尾的 ]
+    
+    // 将圆括号包裹的 LaTeX 公式转换为 $ ... $
+    // 匹配模式：(包含反斜杠或LaTeX命令的内容)
+    // 例如: (f: \mathbb{R} \to \mathbb{R})
+    // 更严格的匹配：确保包含 LaTeX 命令且不是纯数字或短文本
+    sanitized = sanitized.replace(/\(([^()]{2,})\)/g, (match, content) => {
+      // 必须包含反斜杠且包含字母（LaTeX命令特征）
+      const hasLatexCommand = /\\[a-zA-Z]{2,}/.test(content)
+      // 不是纯数字或纯标点
+      const notJustNumber = !/^[\d\s.,;:!?]+$/.test(content)
+      
+      if (hasLatexCommand && notJustNumber) {
+        return `$${content.trim()}$`
+      }
+      return match  // 不是LaTeX公式，保持原样
+    })
+    
     sanitized = sanitized.replace(/\n{3,}/g, '\n\n')
     return sanitized.trim()
   }, [])
@@ -296,12 +343,41 @@ function App() {
   const displayText = useMemo(() => sanitizeDisplayText(result?.text || ''), [result?.text, sanitizeDisplayText])
 
   useEffect(() => {
+    // 初始检查后端
     checkBackend()
-    // 每30秒检查一次后端连接
-    const interval = setInterval(() => {
-      checkBackend()
-    }, 30000)
-    return () => clearInterval(interval)
+    
+    // 空闲检测：仅在用户长时间无操作时检查后端
+    let idleTimer = null
+    let lastActivityTime = Date.now()
+    const IDLE_CHECK_INTERVAL = 5 * 60 * 1000 // 5分钟空闲后检查
+    const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart']
+    
+    const resetIdleTimer = () => {
+      lastActivityTime = Date.now()
+      if (idleTimer) clearTimeout(idleTimer)
+      
+      idleTimer = setTimeout(() => {
+        // 空闲5分钟后检查后端
+        if (Date.now() - lastActivityTime >= IDLE_CHECK_INTERVAL) {
+          checkBackend()
+        }
+      }, IDLE_CHECK_INTERVAL)
+    }
+    
+    // 监听用户活动
+    ACTIVITY_EVENTS.forEach(event => {
+      window.addEventListener(event, resetIdleTimer, { passive: true })
+    })
+    
+    // 启动空闲检测
+    resetIdleTimer()
+    
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      ACTIVITY_EVENTS.forEach(event => {
+        window.removeEventListener(event, resetIdleTimer)
+      })
+    }
   }, [])
 
   const checkBackend = async () => {
@@ -413,6 +489,9 @@ function App() {
       return
     }
 
+    // 在提交前主动检查后端状态
+    await checkBackend()
+    
     if (!backendAvailable) {
       alert(t('alertBackendOffline'))
       return
@@ -1301,9 +1380,21 @@ function App() {
                     <>
                       {/* 完整文本结果 - 强制使用markdown渲染 */}
                       <div className="text-gray-200 text-sm prose prose-invert prose-sm max-w-none prose-table:border prose-table:border-white/20 prose-th:border prose-th:border-white/20 prose-td:border prose-td:border-white/20 prose-headings:text-white prose-h1:text-xl prose-h2:text-lg prose-h3:text-base">
+                        {/* 调试：显示原始文本 */}
+                        {process.env.NODE_ENV === 'development' && displayText && (
+                          <details style={{ marginBottom: '10px', padding: '10px', background: 'rgba(59,130,246,0.1)', borderRadius: '5px', fontSize: '12px' }}>
+                            <summary style={{ cursor: 'pointer', color: '#60a5fa' }}>🔍 调试信息（点击展开）</summary>
+                            <pre style={{ marginTop: '10px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#22c55e' }}>
+                              {displayText.substring(0, 500)}
+                            </pre>
+                          </details>
+                        )}
                         <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
+                          remarkPlugins={[remarkMath, remarkGfm]}
+                          rehypePlugins={[rehypeKatex]}
+                          components={{
+                            p: ({node, ...props}) => <p {...props} style={{ marginBottom: '1em' }} />
+                          }}
                         >
                           {displayText}
                         </ReactMarkdown>

@@ -101,3 +101,66 @@ code {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* KaTeX 数学公式样式优化 */
+.katex {
+  font-size: 1.05em !important;
+  color: #e5e7eb !important;
+}
+
+.katex-display {
+  margin: 1em 0 !important;
+  padding: 0.8em 1em !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-radius: 8px !important;
+  border-left: 3px solid rgba(168, 85, 247, 0.5) !important;
+  overflow-x: auto !important;
+}
+
+.katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
+}
+
+/* 行内公式 */
+.katex-html {
+  color: #a78bfa !important;
+}
+
+/* 公式中的特殊符号 */
+.katex .mord,
+.katex .mrel,
+.katex .mbin,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct {
+  color: #e5e7eb !important;
+}
+
+/* 公式中的操作符 */
+.katex .mop {
+  color: #fbbf24 !important;
+}
+
+/* 公式中的函数名 */
+.katex .mop.amsrm {
+  color: #60a5fa !important;
+}
+
+/* Markdown prose 样式中的公式适配 */
+.prose .katex-display {
+  margin: 1.5em 0 !important;
+}
+
+.prose-invert .katex {
+  color: #e5e7eb !important;
+}

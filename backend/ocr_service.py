@@ -8,48 +8,129 @@ import fitz  # PyMuPDF
 from PIL import Image
 import io
 import asyncio
+from config_loader import get_config
 
 class OCRService:
     def __init__(self):
         self.model = None
         self.tokenizer = None
-        self.model_name = 'D:\\models\\deepseek-ocr\\'
+        self.model_name = None
+        self.model_path = None
         self._ready = False
+        self.config = get_config()
         
     async def initialize(self):
         """初始化模型"""
         try:
-            print(torch.__version__)
-            print(torch.cuda.device_count())  # 显示可见 GPU 数量
-            print(torch.cuda.is_available())  # 是否检测到 GPU
-            print("Loading DeepSeek-OCR model...")
-            os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+            # 获取模型配置
+            model_config = self.config.get_model_config()
+            source = model_config['source']
+            load_params = model_config.get('load_params', {})
             
+            print(f"\n{'='*60}")
+            print(f"🚀 初始化 DeepSeek-OCR 模型")
+            print(f"{'='*60}")
+            print(f"📦 模型源: {source}")
+            print(f"🔧 PyTorch 版本: {torch.__version__}")
+            print(f"🎮 可用 GPU 数量: {torch.cuda.device_count()}")
+            print(f"✅ CUDA 可用: {torch.cuda.is_available()}")
+            
+            # 设置 CUDA 设备
+            cuda_devices = load_params.get('cuda_visible_devices', '0')
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(cuda_devices)
+            print(f"🎯 使用 GPU 设备: {cuda_devices}")
+            
+            # 根据不同的模型源加载模型
+            if source == 'huggingface':
+                self.model_name = model_config['model_name']
+                mirror = model_config.get('mirror')
+                if mirror:
+                    os.environ['HF_ENDPOINT'] = mirror
+                    print(f"🌐 使用 Huggingface 镜像: {mirror}")
+                print(f"📥 从 Huggingface 加载模型: {self.model_name}")
+                
+            elif source == 'modelscope':
+                self.model_name = model_config['model_name']
+                print(f"📥 从 ModelScope 加载模型: {self.model_name}")
+                # ModelScope 需要使用特定的加载方式
+                try:
+                    from modelscope import snapshot_download
+                    model_dir = snapshot_download(self.model_name)
+                    self.model_path = model_dir
+                    print(f"📂 ModelScope 模型已下载到: {model_dir}")
+                except ImportError:
+                    print("⚠️  未安装 modelscope 库，尝试直接从模型名称加载...")
+                    self.model_path = self.model_name
+                    
+            elif source == 'local':
+                self.model_path = model_config['model_path']
+                print(f"📂 从本地加载模型: {self.model_path}")
+                if not os.path.exists(self.model_path):
+                    raise FileNotFoundError(f"本地模型路径不存在: {self.model_path}")
+            else:
+                raise ValueError(f"不支持的模型源: {source}")
+            
+            # 确定加载路径
+            load_path = self.model_path if self.model_path else self.model_name
+            
+            # 加载 tokenizer
+            print(f"🔤 加载 Tokenizer...")
+            trust_remote_code = load_params.get('trust_remote_code', True)
             self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name, 
-                trust_remote_code=True
+                load_path, 
+                trust_remote_code=trust_remote_code
             )
-            # 减少生成警告：若无 pad_token，则用 eos 兜底
+            
+            # 设置 pad_token
             try:
                 if getattr(self.tokenizer, 'pad_token_id', None) is None and getattr(self.tokenizer, 'eos_token', None) is not None:
                     self.tokenizer.pad_token = self.tokenizer.eos_token
-                    print(f"Set tokenizer.pad_token to eos_token: id={self.tokenizer.pad_token_id}")
+                    print(f"✅ 设置 pad_token = eos_token (id={self.tokenizer.pad_token_id})")
             except Exception as _:
                 pass
             
+            # 加载模型
+            print(f"🤖 加载模型...")
+            attn_impl = load_params.get('attn_implementation', 'flash_attention_2')
+            use_safetensors = load_params.get('use_safetensors', True)
+            
             self.model = AutoModel.from_pretrained(
-                self.model_name,
-                _attn_implementation='flash_attention_2',
-                trust_remote_code=True,
-                use_safetensors=True
+                load_path,
+                _attn_implementation=attn_impl,
+                trust_remote_code=trust_remote_code,
+                use_safetensors=use_safetensors
             )
             
-            self.model = self.model.eval().cuda().to(torch.bfloat16)
+            # 设置设备和数据类型
+            device = load_params.get('device', 'cuda')
+            torch_dtype = load_params.get('torch_dtype', 'bfloat16')
+            
+            dtype_map = {
+                'float32': torch.float32,
+                'float16': torch.float16,
+                'bfloat16': torch.bfloat16
+            }
+            dtype = dtype_map.get(torch_dtype, torch.bfloat16)
+            
+            print(f"⚙️  设置模型: device={device}, dtype={torch_dtype}")
+            self.model = self.model.eval()
+            
+            if device == 'cuda' and torch.cuda.is_available():
+                self.model = self.model.cuda().to(dtype)
+            else:
+                self.model = self.model.to(dtype)
+                if device == 'cuda':
+                    print("⚠️  CUDA 不可用，使用 CPU")
+            
             self._ready = True
-            print("Model loaded successfully!")
+            print(f"{'='*60}")
+            print(f"✅ 模型加载成功！")
+            print(f"{'='*60}\n")
             
         except Exception as e:
-            print(f"Error loading model: {e}")
+            print(f"\n❌ 模型加载失败: {e}")
+            import traceback
+            traceback.print_exc()
             raise
     
     def is_ready(self) -> bool:
