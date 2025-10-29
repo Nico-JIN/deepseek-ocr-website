@@ -2,7 +2,60 @@
 
 基于 DeepSeek-OCR 模型的 OCR 识别平台，集成 FastAPI 后端与 React 前端，提供实时流式识别、多语言界面、对象定位等功能。
 <img width="1360" height="804" alt="QQ_1761286542973" src="https://github.com/user-attachments/assets/ac44ec4c-a2dd-45e1-9413-c4602c9ba513" />
+## ✅本次更新包含两个主要功能改进：
 
+### 1. ✅ 多种模型加载方式支持
+
+现在支持从三个不同来源加载 DeepSeek-OCR 模型，通过配置文件灵活切换。
+
+#### 新增文件
+- `backend/config.yaml` - 主配置文件
+- `backend/config.yaml.example` - 配置示例文件
+- `backend/config_loader.py` - 配置加载器模块
+
+#### 支持的模型源
+1. **Huggingface** 🤗
+   - 从 Huggingface Hub 加载模型
+   - 支持镜像加速（国内用户推荐）
+   - 配置示例：
+     ```yaml
+     model:
+       source: "huggingface"
+       huggingface:
+         model_name: "deepseek-ai/deepseek-ocr"
+         mirror: "https://hf-mirror.com"
+     ```
+
+2. **ModelScope** 🇨🇳
+   - 从 ModelScope 加载模型（国内访问更快）
+   - 需要安装：`pip install modelscope`
+   - 配置示例：
+     ```yaml
+     model:
+       source: "modelscope"
+       modelscope:
+         model_name: "deepseek-ai/deepseek-ocr"
+     ```
+
+3. **Local** 💾
+   - 使用本地已下载的模型（默认方式）
+   - 配置示例：
+     ```yaml
+     model:
+       source: "local"
+       local:
+         model_path: "D:\\models\\deepseek-ocr\\"
+     ```
+### 2. ✅ LaTeX 数学公式渲染支持
+
+识别结果现在可以完美显示 LaTeX 数学公式！
+
+#### 新增功能
+- ✨ 支持行内公式：`$E = mc^2$`
+- ✨ 支持块级公式：`$$\int_{a}^{b} f(x) dx$$`
+- ✨ 优雅的暗色主题样式
+- ✨ 语法高亮（操作符、函数名、符号等）
+- ✨ 长公式横向滚动支持
 ## 📋 项目简介
 
 一个开箱即用的 OCR 识别平台，支持：
@@ -20,6 +73,7 @@
 > 如一份pdf有多页，可进行边解析边显示，并显示视觉标记。
 <img width="2162" height="1218" alt="QQ_1761221635984" src="https://github.com/user-attachments/assets/73f9cb52-48d2-4e55-badb-21f423224aad" />
 <img width="1278" height="870" alt="QQ_1761222810862" src="https://github.com/user-attachments/assets/4a4c3f74-c817-42c7-8e1b-f72906c230d2" />
+
 
 
 ## 📁 项目结构
